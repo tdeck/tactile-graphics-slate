@@ -6,44 +6,44 @@ use <BOSL/shapes.scad>
 ROWS = 28;
 COLUMNS = 48;
 */
-
-USE_CARD_CUTOUT = true;
-CARD_CUTOUT_WIDTH = 28;
-CARD_CUTOUT_LENGTH = 25;
-CARD_CUTOUT_THICKNESS = .6; // TODO
-
-ROWS = 8;
-COLUMNS = 8;
-
-DOT_SPACING = 2.54; // This is the CA sign standard where the cell spacing is actually 
-DEPRESSION_DIAMETER = 1.9; // TODO need to tune this
-DEPRESSION_DEPTH = .9;
-STYLUS_GUIDE_CLEARANCE = .1;
-
-BASE_THICKNESS = 1.5;
-TOP_THICKNESS = 2;
-SIDE_SPACE = 5;
-CHAMFER_HEIGHT = .4; // This makes it easier to remove the print from the bed
-
-ALIGNMENT_SPIKE_TOP_DIAM = .5;
-ALIGNMENT_SPIKE_BOTTOM_DIAM = 1.5;
-ALIGNMENT_SPIKE_HEIGHT = 3;
-ALIGNMENT_HOLE_CLEARANCE = .2;
-
-USE_CELL_GUIDES = true;
-
-RIDGE_SPACING = 8;
-LINE_RIDGE_HEIGHT = .8; // These are every 8 dots (2 Braille lines)
-COL_RIDGE_HEIGHT = 0; // These are every 8 columns, to match the above
-MAX_RIDGE_WIDTH = 1; // These ridges will mostly be pierced by holes
-INTERSECTION_BUMP_HEIGHT = .8;
-INTERSECTION_BUMP_DIAM = DEPRESSION_DIAMETER + 2 * .8;
-
 /* TODO 3x5 card
 CARD_CUTOUT_WIDTH = 5 * 25.4 + 1;
 CARD_CUTOUT_LENGTH = 3 * 25.4 + 1;
 */
 
+USE_CARD_CUTOUT = true;
+CARD_CUTOUT_WIDTH = 28;
+CARD_CUTOUT_LENGTH = 26;
+CARD_CUTOUT_THICKNESS = .6; // TODO
+CARD_FINGER_NOTCH_SIZE = 20;
+CARD_FINGER_NOTCH_DEPTH = 5;
+
+ROWS = 8;
+COLUMNS = 8;
+
+DOT_SPACING = 2.54; // This is the CA sign standard where the cell spacing is a multiple of dot spacing 
+DEPRESSION_DIAMETER = 1.9;
+DEPRESSION_DEPTH = .9; // TODO maybe this should be shallower
+STYLUS_GUIDE_CLEARANCE = .1;
+
+BASE_THICKNESS = 2;
+TOP_THICKNESS = 2;
+SIDE_SPACE = 6;
+CHAMFER_HEIGHT = .4; // This makes it easier to remove the print from the bed
+
+ALIGNMENT_SPIKE_TOP_DIAM = .5;
+ALIGNMENT_SPIKE_BOTTOM_DIAM = 1.5;
+ALIGNMENT_SPIKE_HEIGHT = 3;
+ALIGNMENT_HOLE_CLEARANCE = .3;
+
+USE_CELL_GUIDES = true;
+
+RIDGE_SPACING = 8;
+LINE_RIDGE_HEIGHT = 1; // These are every 8 dots (2 Braille lines)
+COL_RIDGE_HEIGHT = 0; // These are every 8 columns, to match the above
+MAX_RIDGE_WIDTH = 1.5; // These ridges will mostly be pierced by holes
+INTERSECTION_BUMP_HEIGHT = 1;
+INTERSECTION_BUMP_DIAM = DEPRESSION_DIAMETER + 2 * .8;
 
 // Utility constants
 ARBITRARY = 1000; // Arbitrary size for various hole dimensions
@@ -65,6 +65,12 @@ module alignment_spike() {
     zcyl(d2=ALIGNMENT_SPIKE_TOP_DIAM, d1=ALIGNMENT_SPIKE_BOTTOM_DIAM, h=ALIGNMENT_SPIKE_HEIGHT);
 }
 
+module card_finger_notch_carveout() {
+    forward(plate_length / 2)
+    scale([CARD_FINGER_NOTCH_DEPTH, CARD_FINGER_NOTCH_SIZE/ 2, 1])
+        zcyl(h=ARBITRARY, r=1);
+}
+
 module bottom_plate() {
     difference() {
         cuboid(
@@ -73,15 +79,9 @@ module bottom_plate() {
             chamfer=CHAMFER_HEIGHT
         );
         
-        
-        platen_negative_offset = 0;
-        if (USE_CARD_CUTOUT) {
-            platen_negative_offset = CARD_CUTOUT_THICKNESS;
-        }
-
         right(DEPRESSION_DIAMETER + SIDE_SPACE)
         forward(DEPRESSION_DIAMETER + SIDE_SPACE)
-        down(platen_negative_offset)
+        down(USE_CARD_CUTOUT ? CARD_CUTOUT_THICKNESS: 0)
         for (r = [0:ROWS-1]) {
             for (c = [0:COLUMNS-1]) {
                 right(c * DOT_SPACING)
@@ -91,12 +91,16 @@ module bottom_plate() {
        }
        
         // Card cutout (may be zero)
-        up(SMALL_DELTA)
-            forward(plate_length / 2)
-            cuboid(
-                [CARD_CUTOUT_WIDTH, CARD_CUTOUT_LENGTH, CARD_CUTOUT_THICKNESS],
-                align=V_DOWN + V_RIGHT
-            );
+       if (USE_CARD_CUTOUT) {
+            up(SMALL_DELTA)
+                forward(plate_length / 2)
+                cuboid(
+                    [CARD_CUTOUT_WIDTH, CARD_CUTOUT_LENGTH, CARD_CUTOUT_THICKNESS],
+                    align=V_DOWN + V_RIGHT
+                );
+           
+           card_finger_notch_carveout();
+       }
     }
 
     // Back alignment spikes
@@ -190,6 +194,9 @@ module top_plate() {
             right(spike_offset) alignment_hole_carveout();
             right(plate_width - spike_offset) alignment_hole_carveout();
         }
+        
+        // Finger notch
+       if (USE_CARD_CUTOUT) card_finger_notch_carveout();
     }
 }
 
