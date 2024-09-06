@@ -1,0 +1,4 @@
+#! /bin/bash
+echo "Please note: This is slow and requires a lot of memory!"
+openscad --export-format binstl -o prints/3x5_cover.stl slate.scad -D 'part="cover"'
+openscad --export-format binstl -o prints/3x5_base.stl slate.scad -D 'part="base"'

@@ -1,25 +1,29 @@
-include <BOSL/constants.scad>
-use <BOSL/transforms.scad>
-use <BOSL/shapes.scad>
+include <BOSL/constants.scad>;
+use <BOSL/transforms.scad>;
+use <BOSL/shapes.scad>;
 
-/* TODO 3x5
+
+// 3x5 card
+USE_CARD_CUTOUT = true;
 ROWS = 28;
 COLUMNS = 48;
-*/
-/* TODO 3x5 card
-CARD_CUTOUT_WIDTH = 5 * 25.4 + 1;
+
+CARD_CUTOUT_WIDTH = 5 * 25.4 + 3;
 CARD_CUTOUT_LENGTH = 3 * 25.4 + 1;
-*/
 
+
+/*
+// Small test piece
 USE_CARD_CUTOUT = true;
-CARD_CUTOUT_WIDTH = 28;
-CARD_CUTOUT_LENGTH = 26;
-CARD_CUTOUT_THICKNESS = .6; // TODO
-CARD_FINGER_NOTCH_SIZE = 20;
-CARD_FINGER_NOTCH_DEPTH = 5;
-
 ROWS = 8;
 COLUMNS = 8;
+CARD_CUTOUT_WIDTH = 28;
+CARD_CUTOUT_LENGTH = 26;
+*/
+
+CARD_CUTOUT_THICKNESS = .9; // Don't want this to flatten the dot
+CARD_FINGER_NOTCH_SIZE = 20;
+CARD_FINGER_NOTCH_DEPTH = 5;
 
 DOT_SPACING = 2.54; // This is the CA sign standard where the cell spacing is a multiple of dot spacing 
 DEPRESSION_DIAMETER = 1.9;
@@ -31,9 +35,17 @@ TOP_THICKNESS = 2;
 SIDE_SPACE = 6;
 CHAMFER_HEIGHT = .4; // This makes it easier to remove the print from the bed
 
+/* For reclosable
 ALIGNMENT_SPIKE_TOP_DIAM = .5;
 ALIGNMENT_SPIKE_BOTTOM_DIAM = 1.5;
 ALIGNMENT_SPIKE_HEIGHT = 3;
+ALIGNMENT_HOLE_CLEARANCE = .3;
+*/
+
+// For welding
+ALIGNMENT_SPIKE_TOP_DIAM = 1.2;
+ALIGNMENT_SPIKE_BOTTOM_DIAM = 1.5;
+ALIGNMENT_SPIKE_HEIGHT = 4;
 ALIGNMENT_HOLE_CLEARANCE = .3;
 
 USE_CELL_GUIDES = true;
@@ -200,7 +212,14 @@ module top_plate() {
     }
 }
 
-bottom_plate();
+part = "base"; // Can be overridden in the CLI
 
-down(BASE_THICKNESS - TOP_THICKNESS) // Cura won't lay 2 parts in same STL on bed
-    forward(plate_length + 5) top_plate();
+
+if (part == "both" || part == "base") {
+    bottom_plate();
+}
+
+if (part == "both" || part == "cover") {
+    down(BASE_THICKNESS - TOP_THICKNESS) // Cura won't lay 2 parts in same STL on bed
+        forward(plate_length + 5) top_plate();
+}
