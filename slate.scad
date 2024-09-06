@@ -212,7 +212,7 @@ module top_plate() {
     }
 }
 
-part = "base"; // Can be overridden in the CLI
+part = "assembly"; // Can be overridden in the CLI
 
 
 if (part == "both" || part == "base") {
@@ -222,4 +222,10 @@ if (part == "both" || part == "base") {
 if (part == "both" || part == "cover") {
     down(BASE_THICKNESS - TOP_THICKNESS) // Cura won't lay 2 parts in same STL on bed
         forward(plate_length + 5) top_plate();
+}
+
+if (part == "assembly") { // NOTE: This can't be printed like this, and it probably can't be previewed either :(
+    bottom_plate();
+
+    up(BASE_THICKNESS + .01) top_plate();
 }
