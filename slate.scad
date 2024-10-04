@@ -21,19 +21,19 @@ CARD_CUTOUT_WIDTH = 28;
 CARD_CUTOUT_LENGTH = 26;
 */
 
-CARD_CUTOUT_THICKNESS = .9; // Don't want this to flatten the dot
-CARD_FINGER_NOTCH_SIZE = 20;
-CARD_FINGER_NOTCH_DEPTH = 5;
-
 DOT_SPACING = 2.54; // This is the CA sign standard where the cell spacing is a multiple of dot spacing 
 DEPRESSION_DIAMETER = 1.9;
-DEPRESSION_DEPTH = .9; // TODO maybe this should be shallower
+DEPRESSION_DEPTH = .7; // TODO maybe this should be shallower
 STYLUS_GUIDE_CLEARANCE = .1;
 
-BASE_THICKNESS = 2;
+BASE_THICKNESS = 3;
 TOP_THICKNESS = 2;
-SIDE_SPACE = 6;
+SIDE_SPACE = 7;
 CHAMFER_HEIGHT = .4; // This makes it easier to remove the print from the bed
+
+CARD_CUTOUT_THICKNESS = .9; // Don't want this to flatten the dot
+CARD_FINGER_NOTCH_SIZE = 20;
+CARD_FINGER_NOTCH_DEPTH = SIDE_SPACE - .8;
 
 /* For reclosable
 ALIGNMENT_SPIKE_TOP_DIAM = .5;
@@ -43,10 +43,10 @@ ALIGNMENT_HOLE_CLEARANCE = .3;
 */
 
 // For welding
-ALIGNMENT_SPIKE_TOP_DIAM = 1.2;
-ALIGNMENT_SPIKE_BOTTOM_DIAM = 1.5;
-ALIGNMENT_SPIKE_HEIGHT = 4;
-ALIGNMENT_HOLE_CLEARANCE = .3;
+ALIGNMENT_SPIKE_TOP_DIAM = 1.6;
+ALIGNMENT_SPIKE_BOTTOM_DIAM = 2;
+ALIGNMENT_SPIKE_HEIGHT = 3;
+ALIGNMENT_HOLE_CLEARANCE = .4;
 
 USE_CELL_GUIDES = true;
 
@@ -67,6 +67,7 @@ $fs = .2;
 
 plate_length = ROWS * DOT_SPACING + DEPRESSION_DIAMETER + 2 * SIDE_SPACE;
 plate_width = COLUMNS * DOT_SPACING + DEPRESSION_DIAMETER + 2 * SIDE_SPACE;
+hole_diameter = DEPRESSION_DIAMETER + 2*STYLUS_GUIDE_CLEARANCE; // Used in markers
 
 module depression() {
     zscale(2*DEPRESSION_DEPTH/DEPRESSION_DIAMETER)
@@ -74,7 +75,12 @@ module depression() {
 }
 
 module alignment_spike() {
-    zcyl(d2=ALIGNMENT_SPIKE_TOP_DIAM, d1=ALIGNMENT_SPIKE_BOTTOM_DIAM, h=ALIGNMENT_SPIKE_HEIGHT);
+    zcyl(
+        d2=ALIGNMENT_SPIKE_TOP_DIAM, 
+        d1=ALIGNMENT_SPIKE_BOTTOM_DIAM,
+        h=ALIGNMENT_SPIKE_HEIGHT,
+        align=V_UP
+    );
 }
 
 module card_finger_notch_carveout() {
@@ -173,7 +179,6 @@ module top_plate() {
             }
         }
 
-        hole_diameter = DEPRESSION_DIAMETER + 2*STYLUS_GUIDE_CLEARANCE;
         right(DEPRESSION_DIAMETER + SIDE_SPACE) forward(DEPRESSION_DIAMETER + SIDE_SPACE) {
             for (r = [0:ROWS-1]) {
                 for (c = [0:COLUMNS-1]) {
@@ -212,20 +217,17 @@ module top_plate() {
     }
 }
 
-part = "assembly"; // Can be overridden in the CLI
 
+module geometry() {
+    echo("Rendering part", $part);
+    if ($part == "base") {
+        bottom_plate();
+    }
 
-if (part == "both" || part == "base") {
-    bottom_plate();
+    if  ($part == "cover") {
+        down(BASE_THICKNESS - TOP_THICKNESS) // Cura won't lay 2 parts in same STL on bed
+            top_plate();
+    }
 }
 
-if (part == "both" || part == "cover") {
-    down(BASE_THICKNESS - TOP_THICKNESS) // Cura won't lay 2 parts in same STL on bed
-        forward(plate_length + 5) top_plate();
-}
-
-if (part == "assembly") { // NOTE: This can't be printed like this, and it probably can't be previewed either :(
-    bottom_plate();
-
-    up(BASE_THICKNESS + .01) top_plate();
-}
+geometry();
