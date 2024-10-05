@@ -1,5 +1,5 @@
 include <slate.scad>;
-part_to_build = $part;
+$part = "none";
 
 PEG_HEIGHT = TOP_THICKNESS + LINE_RIDGE_HEIGHT;
 PEG_CLEARANCE = .22; // To allow the peg to be inserted; radius clearance

@@ -21,7 +21,7 @@ CARD_CUTOUT_WIDTH = 28;
 CARD_CUTOUT_LENGTH = 26;
 */
 
-DOT_SPACING = 2.54; // This is the CA sign standard where the cell spacing is a multiple of dot spacing 
+DOT_SPACING = 2.54; // This is the CA sign standard where the cell spacing is a multiple of dot spacing
 DEPRESSION_DIAMETER = 1.9;
 DEPRESSION_DEPTH = .7; // TODO maybe this should be shallower
 STYLUS_GUIDE_CLEARANCE = .1;
@@ -43,10 +43,10 @@ ALIGNMENT_HOLE_CLEARANCE = .3;
 */
 
 // For welding
-ALIGNMENT_SPIKE_TOP_DIAM = 1.6;
-ALIGNMENT_SPIKE_BOTTOM_DIAM = 2;
+ALIGNMENT_SPIKE_TOP_DIAM = 2;
+ALIGNMENT_SPIKE_BOTTOM_DIAM = 2.5;
 ALIGNMENT_SPIKE_HEIGHT = 3;
-ALIGNMENT_HOLE_CLEARANCE = .4;
+ALIGNMENT_HOLE_CLEARANCE = .5;
 
 USE_CELL_GUIDES = true;
 
@@ -70,13 +70,19 @@ plate_width = COLUMNS * DOT_SPACING + DEPRESSION_DIAMETER + 2 * SIDE_SPACE;
 hole_diameter = DEPRESSION_DIAMETER + 2*STYLUS_GUIDE_CLEARANCE; // Used in markers
 
 module depression() {
-    zscale(2*DEPRESSION_DEPTH/DEPRESSION_DIAMETER)
-        sphere(d=DEPRESSION_DIAMETER);
+    // Cut off top half to hopefully reduce work done in rendering
+    difference() {
+        zscale(2*DEPRESSION_DEPTH/DEPRESSION_DIAMETER)
+            sphere(d=DEPRESSION_DIAMETER);
+
+        up(2*SMALL_DELTA)
+            upcube(ARBITRARY);
+    }
 }
 
 module alignment_spike() {
     zcyl(
-        d2=ALIGNMENT_SPIKE_TOP_DIAM, 
+        d2=ALIGNMENT_SPIKE_TOP_DIAM,
         d1=ALIGNMENT_SPIKE_BOTTOM_DIAM,
         h=ALIGNMENT_SPIKE_HEIGHT,
         align=V_UP
@@ -96,7 +102,7 @@ module bottom_plate() {
             align=V_DOWN + V_RIGHT + V_FWD,
             chamfer=CHAMFER_HEIGHT
         );
-        
+
         right(DEPRESSION_DIAMETER + SIDE_SPACE)
         forward(DEPRESSION_DIAMETER + SIDE_SPACE)
         down(USE_CARD_CUTOUT ? CARD_CUTOUT_THICKNESS: 0)
@@ -107,7 +113,7 @@ module bottom_plate() {
                         depression();
             }
        }
-       
+
         // Card cutout (may be zero)
        if (USE_CARD_CUTOUT) {
             up(SMALL_DELTA)
@@ -116,7 +122,7 @@ module bottom_plate() {
                     [CARD_CUTOUT_WIDTH, CARD_CUTOUT_LENGTH, CARD_CUTOUT_THICKNESS],
                     align=V_DOWN + V_RIGHT
                 );
-           
+
            card_finger_notch_carveout();
        }
     }
@@ -146,7 +152,7 @@ module top_plate() {
                 align=V_DOWN + V_RIGHT + V_FWD,
                 chamfer=CHAMFER_HEIGHT
             );
-            
+
             // Ridges
             color("green")
             right(SIDE_SPACE)  forward(SIDE_SPACE) {
@@ -158,7 +164,7 @@ module top_plate() {
                             align=V_UP + V_RIGHT
                         );
                 }
-                
+
                 // Vertical ridges
                 for (c = [RIDGE_SPACING: RIDGE_SPACING: COLUMNS - 1]) { // TODO these should start at right
                     right(DEPRESSION_DIAMETER + c * DOT_SPACING - DOT_SPACING/2)
@@ -166,7 +172,7 @@ module top_plate() {
                             align=V_UP + V_FWD
                         );
                 }
-                
+
                 // Intersection bumps
                 color("blue")
                 for (r = [3: 4: ROWS - 1]) {
@@ -187,7 +193,7 @@ module top_plate() {
                            zcyl(h=ARBITRARY, d=hole_diameter);
                 }
            }
-           
+
            // Center cutouts to indicate Braille cells
            if (USE_CELL_GUIDES) {
                for (r = [0: 4: ROWS - 3]) {
@@ -199,7 +205,7 @@ module top_plate() {
                }
            }
        }
-       
+
         // Alignment holes
         spike_offset = SIDE_SPACE / 2;
         forward(spike_offset) {
@@ -211,12 +217,11 @@ module top_plate() {
             right(spike_offset) alignment_hole_carveout();
             right(plate_width - spike_offset) alignment_hole_carveout();
         }
-        
+
         // Finger notch
        if (USE_CARD_CUTOUT) card_finger_notch_carveout();
     }
 }
-
 
 module geometry() {
     echo("Rendering part", $part);
