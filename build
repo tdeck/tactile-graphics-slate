@@ -3,3 +3,5 @@ echo "Please note: This is slow and requires a lot of memory!"
 echo "On Troy's machine this requires 1.5 hours to complete; most of the time is the base"
 openscad --hardwarnings --export-format binstl -o prints/3x5_cover.stl slate.scad -D '$part="cover"'
 openscad --hardwarnings --export-format binstl -o prints/3x5_base.stl slate.scad -D '$part="base"'
+# This isn't slow but it's just for good measure
+openscad --hardwarnings --export-format binstl -o prints/markers.stl markers.scad
